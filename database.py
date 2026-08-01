@@ -241,3 +241,25 @@ def obtener_producto_mas_stock():
     conexion.close()
 
     return producto
+
+
+def obtener_productos_por_categoria():
+
+    conexion = sqlite3.connect("inventario.db")
+
+    cursor = conexion.cursor()
+
+    cursor.execute("""
+        SELECT
+            categoria,
+            COUNT(*)
+        FROM productos
+        GROUP BY categoria
+        ORDER BY COUNT(*) DESC
+    """)
+
+    datos = cursor.fetchall()
+
+    conexion.close()
+
+    return datos

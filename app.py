@@ -1,14 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-from database import (
-    obtener_productos,
-    agregar_producto,
-    contar_productos,
-    obtener_valor_inventario,
-    modificar_producto,
-    eliminar_producto
-)
+import database
 
 st.set_page_config(
     page_title="Sistema de Inventario",
@@ -22,15 +15,15 @@ st.title("📦 Sistema de Inventario")
 # MÉTRICAS
 # ==========================
 
-col1, col2 = st.columns(2)
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     st.metric(
         "Productos registrados",
-        contar_productos()
+        database.contar_productos()
     )
 
-valor = obtener_valor_inventario()
+valor = database.obtener_valor_inventario()
 
 if valor is None:
     valor = 0
@@ -42,6 +35,33 @@ with col2:
     )
 
 st.divider()
+
+producto_caro = database.obtener_producto_mas_caro()
+
+with col3:
+
+    if producto_caro:
+
+        st.metric(
+            "💎 Producto más caro",
+            producto_caro[1],
+            f"${producto_caro[3]:,.2f}"
+        )
+
+producto_stock = database.obtener_producto_mas_stock()
+
+with col4:
+
+    if producto_stock:
+
+        st.metric(
+            "📦 Mayor stock",
+            producto_stock[1],
+            f"{producto_stock[4]} unidades"
+        )
+
+st.divider()
+
 
 # ==========================
 # FORMULARIO
@@ -77,7 +97,7 @@ with st.form("agregar_producto"):
 
         else:
 
-            agregar_producto(
+            database.agregar_producto(
                 nombre,
                 categoria,
                 precio,
@@ -98,7 +118,7 @@ st.subheader("📋 Inventario")
 
 buscar = st.text_input("🔍 Buscar producto")
 
-productos = obtener_productos()
+productos = database.obtener_productos()
 
 if productos:
 
@@ -123,6 +143,18 @@ if productos:
             )
         ]
 
+        st.subheader("📊 Productos por categoría")
+
+        grafico = (
+            df.groupby("Categoría")
+            .size()
+            .reset_index(name="Cantidad")
+        )
+
+        st.bar_chart(
+            grafico.set_index("Categoría")
+        )
+
         st.info(
             "La tabla permite revisar y editar visualmente los datos. "
             "Para guardar cambios en la base de datos utiliza el formulario de edición inferior."
@@ -139,7 +171,7 @@ if productos:
 
     st.subheader("✏️ Modificar producto")
 
-    productos = obtener_productos()
+    productos = database.obtener_productos()
 
     if productos:
 
@@ -185,7 +217,7 @@ if productos:
 
             if guardar:
 
-                filas = modificar_producto(
+                filas = database.modificar_producto(
                     producto[0],
                     nombre,
                     categoria,
@@ -207,7 +239,7 @@ if productos:
 
     st.subheader("🗑 Eliminar producto")
 
-    productos = obtener_productos()
+    productos = database.obtener_productos()
 
     if productos:
 
@@ -232,7 +264,7 @@ if productos:
 
             if confirmar:
 
-                filas = eliminar_producto(producto[0])
+                filas = database.eliminar_producto(producto[0])
 
                 if filas:
 
